@@ -8,37 +8,64 @@
     </head>
     <body>
         <header>
-            <h1>Welcome to MacShop!</h1>
+            <h1>Добро пожаловать в MacShop!</h1>
         </header>
         <main>
             <section class="catalog">
-                <h2>Catalog</h2>
+                <h2>Каталог</h2>
                 <div class="product-grid">
                     <article class="product-card">
                         <h3>MacBook Air 13" M1</h3>
                         <p>Price: $999</p>
-                        <button>Add to Cart</button>
+                        <button>В корзину</button>
                     </article>
                     <article class="product-card">
                         <h3>MacBook Air 13" M2</h3>
                         <p>Price: $1299</p>
-                        <button>Add to Cart</button>
+                        <button>В корзину</button>
                     </article>
                     <article class="product-card">
                         <h3>MacBook Air 13" M3</h3>
                         <p>Price: $1499</p>
-                        <button>Add to Cart</button>
+                        <button>В корзину</button>
                     </article>
                     <article class="product-card">
                         <h3>MacBook Air 13" M4</h3>
                         <p>Price: $1999</p>
-                        <button>Add to Cart</button>
+                        <button>В корзину</button>
                     </article>
                 </div>
             </section>
-            <section>
-                <h2>Cart</h2>
+            <section class="cart">
+                <h2>Корзина</h2>
+                <div class="cart-items">
+                    <p>Корзина пуста</p>
+                </div>
+                <p class="cart-total">Итого: $<span id="total-price">0</span></p>
+                <button class="checkout-btn">Оформить заказ</button>
             </section>
+            <div id="modal" class="modal">
+                <div class="modal-content">
+                    <span class="close-btn">&times;</span>
+                    <h2>Оформление заказа</h2>
+                    <form id="order-form">
+                        <label for="first-name">Имя:</label>
+                        <input type="text" id="first-name" required>
+
+                        <label for="last-name">Фамилия:</label>
+                        <input type="text" id="last-name" required>
+
+                        <label for="address">Адрес доставки:</label>
+                        <input type="text" id="address" required>
+
+                        <label for="phone">Телефон:</label>
+                        <input type="tel" id="phone" required>
+
+                        <button type="submit">Создать заказ</button>
+                    </form>
+                </div>
+            </div>
         </main>
+        <script src="script.js"></script>
     </body>
 </html>
