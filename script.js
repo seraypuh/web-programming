@@ -1,4 +1,4 @@
-let cart = [];
+let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
 const checkoutBtn = document.querySelector('.checkout-btn');
 const modal = document.getElementById('modal');
@@ -65,6 +65,7 @@ function updateCart() {
         cartItemsContainer.appendChild(itemElement);
     });
     totalPriceElement.textContent = total;
+    localStorage.setItem('cart', JSON.stringify(cart));
 }
 
 function changeQuantity(index, change) {
@@ -79,3 +80,5 @@ function removeItem(index) {
     cart.splice(index, 1);
     updateCart();
 }
+
+updateCart();
