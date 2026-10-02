@@ -19,6 +19,7 @@ orderForm.addEventListener('submit', (event) => {
     modal.style.display = 'none';
     orderForm.reset();
     cart = [];
+    localStorage.removeItem('cart');
     updateCart();
 });
 
