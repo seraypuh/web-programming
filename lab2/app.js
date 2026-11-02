@@ -1,3 +1,9 @@
+const STORAGE_KEY = 'todo_app_tasks';
+  let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+  const saveToStorage = () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  };
 document.addEventListener('DOMContentLoaded', () => {
   const body = document.body;
 
@@ -93,3 +99,82 @@ document.addEventListener('DOMContentLoaded', () => {
   appContainer.append(header, formSection, controlsSection, listSection);
   body.append(appContainer);
 });
+
+const renderTasks = () => {
+    todoList.innerHTML = '';
+
+    if (tasks.length === 0) {
+      const emptyLi = document.createElement('li');
+      emptyLi.className = 'empty-state';
+      emptyLi.textContent = 'Задачи не найдены';
+      todoList.append(emptyLi);
+      return;
+    }
+
+    tasks.forEach(task => {
+      const li = document.createElement('li');
+      li.className = 'todo-item';
+      li.dataset.id = task.id;
+
+      const leftDiv = document.createElement('div');
+      leftDiv.className = 'todo-left';
+
+      const details = document.createElement('div');
+      details.className = 'todo-details';
+
+      const titleEl = document.createElement('span');
+      titleEl.className = 'todo-text';
+      titleEl.textContent = task.title;
+
+      const dateEl = document.createElement('span');
+      dateEl.className = 'todo-date';
+      dateEl.textContent = `Срок: ${task.date}`;
+
+      details.append(titleEl, dateEl);
+      leftDiv.append(details);
+
+      const actions = document.createElement('div');
+      actions.className = 'todo-actions';
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'btn btn-danger btn-sm';
+      deleteBtn.textContent = 'Удалить';
+      deleteBtn.addEventListener('click', () => deleteTask(task.id));
+
+      actions.append(deleteBtn);
+      li.append(leftDiv, actions);
+      todoList.append(li);
+    });
+  };
+
+  const addTask = (titleText, dateVal) => {
+    const newTask = {
+      id: Date.now().toString(),
+      title: titleText,
+      date: dateVal,
+      completed: false,
+      isEditing: false
+    };
+    tasks.unshift(newTask);
+    saveToStorage();
+    renderTasks();
+  };
+
+  const deleteTask = (id) => {
+    tasks = tasks.filter(t => t.id !== id);
+    saveToStorage();
+    renderTasks();
+  };
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const val = titleInput.value.trim();
+    const dateVal = dateInput.value;
+    if (val && dateVal) {
+      addTask(val, dateVal);
+      titleInput.value = '';
+      dateInput.value = '';
+    }
+  });
+
+  renderTasks();
