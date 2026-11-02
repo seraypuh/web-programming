@@ -1,10 +1,11 @@
-const STORAGE_KEY = 'todo_app_tasks';
+document.addEventListener('DOMContentLoaded', () => {
+  const STORAGE_KEY = 'todo_app_tasks';
   let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
   const saveToStorage = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
   };
-document.addEventListener('DOMContentLoaded', () => {
+
   const body = document.body;
 
   const appContainer = document.createElement('main');
@@ -98,26 +99,92 @@ document.addEventListener('DOMContentLoaded', () => {
 
   appContainer.append(header, formSection, controlsSection, listSection);
   body.append(appContainer);
-});
 
-const renderTasks = () => {
-    todoList.innerHTML = '';
+  const renderTasks = () => {
+      todoList.innerHTML = '';
 
-    if (tasks.length === 0) {
-      const emptyLi = document.createElement('li');
-      emptyLi.className = 'empty-state';
-      emptyLi.textContent = 'Задачи не найдены';
-      todoList.append(emptyLi);
-      return;
-    }
+      if (tasks.length === 0) {
+        const emptyLi = document.createElement('li');
+        emptyLi.className = 'empty-state';
+        emptyLi.textContent = 'Задачи не найдены';
+        todoList.append(emptyLi);
+        return;
+      }
 
-    tasks.forEach(task => {
+      tasks.forEach(task => {
       const li = document.createElement('li');
-      li.className = 'todo-item';
+      li.className = `todo-item ${task.completed ? 'completed' : ''}`;
       li.dataset.id = task.id;
 
+      if (task.isEditing) {
+        renderEditMode(li, task);
+      } else {
+        renderNormalMode(li, task);
+      }
+
+      todoList.append(li);
+    });
+    };
+
+    const addTask = (titleText, dateVal) => {
+      const newTask = {
+        id: Date.now().toString(),
+        title: titleText,
+        date: dateVal,
+        completed: false,
+        isEditing: false
+      };
+      tasks.unshift(newTask);
+      saveToStorage();
+      renderTasks();
+    };
+
+    const deleteTask = (id) => {
+      tasks = tasks.filter(t => t.id !== id);
+      saveToStorage();
+      renderTasks();
+    };
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const val = titleInput.value.trim();
+      const dateVal = dateInput.value;
+      if (val && dateVal) {
+        addTask(val, dateVal);
+        titleInput.value = '';
+        dateInput.value = '';
+      }
+    });
+
+    renderTasks();
+
+  const toggleTaskStatus = (id) => {
+      tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+      saveToStorage();
+      renderTasks();
+    };
+
+    const setEditMode = (id, status) => {
+      tasks = tasks.map(t => t.id === id ? { ...t, isEditing: status } : t);
+      renderTasks();
+    };
+
+    const saveEdit = (id, newTitle, newDate) => {
+      if (!newTitle || !newDate) return;
+      tasks = tasks.map(t => t.id === id ? { ...t, title: newTitle, date: newDate, isEditing: false } : t);
+      saveToStorage();
+      renderTasks();
+    };
+
+  const renderNormalMode = (li, task) => {
       const leftDiv = document.createElement('div');
       leftDiv.className = 'todo-left';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.className = 'todo-checkbox';
+      checkbox.checked = task.completed;
+      checkbox.addEventListener('change', () => toggleTaskStatus(task.id));
 
       const details = document.createElement('div');
       details.className = 'todo-details';
@@ -131,50 +198,59 @@ const renderTasks = () => {
       dateEl.textContent = `Срок: ${task.date}`;
 
       details.append(titleEl, dateEl);
-      leftDiv.append(details);
+      leftDiv.append(checkbox, details);
 
       const actions = document.createElement('div');
       actions.className = 'todo-actions';
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'btn btn-filter btn-sm';
+      editBtn.textContent = 'Изменить';
+      editBtn.addEventListener('click', () => setEditMode(task.id, true));
 
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'btn btn-danger btn-sm';
       deleteBtn.textContent = 'Удалить';
       deleteBtn.addEventListener('click', () => deleteTask(task.id));
 
-      actions.append(deleteBtn);
+      actions.append(editBtn, deleteBtn);
       li.append(leftDiv, actions);
-      todoList.append(li);
-    });
-  };
-
-  const addTask = (titleText, dateVal) => {
-    const newTask = {
-      id: Date.now().toString(),
-      title: titleText,
-      date: dateVal,
-      completed: false,
-      isEditing: false
     };
-    tasks.unshift(newTask);
-    saveToStorage();
-    renderTasks();
-  };
 
-  const deleteTask = (id) => {
-    tasks = tasks.filter(t => t.id !== id);
-    saveToStorage();
-    renderTasks();
-  };
+    const renderEditMode = (li, task) => {
+      const editForm = document.createElement('form');
+      editForm.className = 'edit-form';
 
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const val = titleInput.value.trim();
-    const dateVal = dateInput.value;
-    if (val && dateVal) {
-      addTask(val, dateVal);
-      titleInput.value = '';
-      dateInput.value = '';
-    }
-  });
+      const editTitle = document.createElement('input');
+      editTitle.type = 'text';
+      editTitle.className = 'input-field edit-input-title';
+      editTitle.value = task.title;
+      editTitle.required = true;
 
-  renderTasks();
+      const editDate = document.createElement('input');
+      editDate.type = 'date';
+      editDate.className = 'input-field edit-input-date';
+      editDate.value = task.date;
+      editDate.required = true;
+
+      const saveBtn = document.createElement('button');
+      saveBtn.type = 'submit';
+      saveBtn.className = 'btn btn-primary btn-sm';
+      saveBtn.textContent = 'Сохранить';
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.type = 'button';
+      cancelBtn.className = 'btn btn-filter btn-sm';
+      cancelBtn.textContent = 'Отмена';
+      cancelBtn.addEventListener('click', () => setEditMode(task.id, false));
+
+      editForm.append(editTitle, editDate, saveBtn, cancelBtn);
+
+      editForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        saveEdit(task.id, editTitle.value.trim(), editDate.value);
+      });
+
+      li.append(editForm);
+    };
+});
