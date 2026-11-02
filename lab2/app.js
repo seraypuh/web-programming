@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
   const STORAGE_KEY = 'todo_app_tasks';
   let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+  let filterStatus = 'all';
+  let sortOrder = 'none';
+  let searchQuery = '';
 
   const saveToStorage = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
@@ -64,13 +67,14 @@ document.addEventListener('DOMContentLoaded', () => {
     { label: 'Выполненные', value: 'completed' }
   ];
 
-  filters.forEach(f => {
+  const filterButtons = filters.map(f => {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = `btn btn-sm btn-filter ${f.value === 'all' ? 'active' : ''}`;
     btn.textContent = f.label;
     btn.dataset.status = f.value;
     filterGroup.append(btn);
+    return btn;
   });
 
   const sortSelect = document.createElement('select');
@@ -101,9 +105,22 @@ document.addEventListener('DOMContentLoaded', () => {
   body.append(appContainer);
 
   const renderTasks = () => {
-      todoList.innerHTML = '';
+    todoList.innerHTML = '';
+    let filteredTasks = tasks.filter(task => {
+      const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
+      if (!matchesSearch) return false;
 
-      if (tasks.length === 0) {
+      if (filterStatus === 'active') return !task.completed;
+      if (filterStatus === 'completed') return task.completed;
+      return true;
+    });
+
+    if (sortOrder === 'asc') {
+      filteredTasks = [...filteredTasks].sort((a, b) => new Date(a.date) - new Date(b.date));
+    } else if (sortOrder === 'desc') {
+      filteredTasks = [...filteredTasks].sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+      if (filteredTasks.length === 0) {
         const emptyLi = document.createElement('li');
         emptyLi.className = 'empty-state';
         emptyLi.textContent = 'Задачи не найдены';
@@ -111,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      tasks.forEach(task => {
+      filteredTasks.forEach(task => {
       const li = document.createElement('li');
       li.className = `todo-item ${task.completed ? 'completed' : ''}`;
       li.dataset.id = task.id;
@@ -155,6 +172,24 @@ document.addEventListener('DOMContentLoaded', () => {
         dateInput.value = '';
       }
     });
+    searchInput.addEventListener('input', (e) => {
+    searchQuery = e.target.value;
+    renderTasks();
+  });
+
+  filterButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterStatus = btn.dataset.status;
+      renderTasks();
+    });
+  });
+
+  sortSelect.addEventListener('change', (e) => {
+    sortOrder = e.target.value;
+    renderTasks();
+  });
 
     renderTasks();
 
