@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const renderTasks = () => {
-    todoList.innerHTML = '';
+    todoList.replaceChildren();
     let filteredTasks = tasks.filter(task => {
       const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
       if (!matchesSearch) return false;
