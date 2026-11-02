@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let filterStatus = 'all';
   let sortOrder = 'none';
   let searchQuery = '';
+  let draggedTaskId = null;
 
   const saveToStorage = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
@@ -104,6 +105,60 @@ document.addEventListener('DOMContentLoaded', () => {
   appContainer.append(header, formSection, controlsSection, listSection);
   body.append(appContainer);
 
+      const addTask = (titleText, dateVal) => {
+      const newTask = {
+        id: Date.now().toString(),
+        title: titleText,
+        date: dateVal,
+        completed: false,
+        isEditing: false
+      };
+      tasks.unshift(newTask);
+      saveToStorage();
+      renderTasks();
+    };
+
+  const setupDragEvents = (li, id) => {
+    li.addEventListener('dragstart', (e) => {
+      draggedTaskId = id;
+      li.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+
+    li.addEventListener('dragend', () => {
+      li.classList.remove('dragging');
+      draggedTaskId = null;
+      document.querySelectorAll('.todo-item').forEach(el => el.classList.remove('drag-over'));
+    });
+
+    li.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      li.classList.add('drag-over');
+    });
+
+    li.addEventListener('dragleave', () => {
+      li.classList.remove('drag-over');
+    });
+
+    li.addEventListener('drop', (e) => {
+      e.preventDefault();
+      li.classList.remove('drag-over');
+
+      if (draggedTaskId && draggedTaskId !== id) {
+        const fromIndex = tasks.findIndex(t => t.id === draggedTaskId);
+        const toIndex = tasks.findIndex(t => t.id === id);
+
+        if (fromIndex !== -1 && toIndex !== -1) {
+          const [movedItem] = tasks.splice(fromIndex, 1);
+          tasks.splice(toIndex, 0, movedItem);
+          saveToStorage();
+          renderTasks();
+        }
+      }
+    });
+  };
+
   const renderTasks = () => {
     todoList.innerHTML = '';
     let filteredTasks = tasks.filter(task => {
@@ -132,28 +187,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const li = document.createElement('li');
       li.className = `todo-item ${task.completed ? 'completed' : ''}`;
       li.dataset.id = task.id;
+      li.draggable = true;
 
       if (task.isEditing) {
         renderEditMode(li, task);
       } else {
         renderNormalMode(li, task);
       }
-
+      setupDragEvents(li, task.id);
       todoList.append(li);
     });
-    };
-
-    const addTask = (titleText, dateVal) => {
-      const newTask = {
-        id: Date.now().toString(),
-        title: titleText,
-        date: dateVal,
-        completed: false,
-        isEditing: false
-      };
-      tasks.unshift(newTask);
-      saveToStorage();
-      renderTasks();
     };
 
     const deleteTask = (id) => {
@@ -190,8 +233,6 @@ document.addEventListener('DOMContentLoaded', () => {
     sortOrder = e.target.value;
     renderTasks();
   });
-
-    renderTasks();
 
   const toggleTaskStatus = (id) => {
       tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
@@ -288,4 +329,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
       li.append(editForm);
     };
+  renderTasks();
 });
